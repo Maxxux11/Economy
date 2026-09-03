@@ -26,14 +26,22 @@ create table public.movements (
   created_at timestamptz not null default now()
 );
 
+create table public.finance_data (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 alter table public.profiles enable row level security;
 alter table public.accounts enable row level security;
 alter table public.movements enable row level security;
+alter table public.finance_data enable row level security;
 
 create policy "Cada usuario puede consultar su perfil" on public.profiles for select using (auth.uid() = id);
 create policy "Cada usuario puede editar su perfil" on public.profiles for update using (auth.uid() = id);
 create policy "Cada usuario administra sus cuentas" on public.accounts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Cada usuario administra sus movimientos" on public.movements for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Cada usuario administra sus datos financieros" on public.finance_data for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create or replace function public.handle_new_user()
 returns trigger
